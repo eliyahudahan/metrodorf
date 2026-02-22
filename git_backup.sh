@@ -11,7 +11,7 @@ if [[ -n $(git status --porcelain) ]]; then
     
     # Always use rebase to avoid merge commits and handle divergent branches
     echo "🔄 Pulling latest changes with rebase..."
-    git pull --rebase origin master
+    git pull --rebase origin main
     
     # Apply stashed changes back
     echo "📤 Applying local changes back..."
@@ -25,9 +25,15 @@ if [[ -n $(git status --porcelain) ]]; then
         exit 1
     fi
     
-    # Add all changes
+    # Add all changes (including new files)
     echo "➕ Adding all changes..."
     git add .
+    
+    # Check if there's anything to commit after add
+    if git diff --cached --quiet; then
+        echo "✨ No changes to commit after adding."
+        exit 0
+    fi
 
     # Ask the user for a commit message
     echo "📝 Please enter your commit message:"
@@ -37,13 +43,13 @@ if [[ -n $(git status --porcelain) ]]; then
     echo "💾 Committing your changes..."
     git commit -m "$commit_message"
 
-    # Push the changes to the 'master' branch
-    echo "🚀 Pushing changes to 'master' branch..."
-    git push -u origin master
+    # Push the changes to the 'main' branch
+    echo "🚀 Pushing changes to 'main' branch..."
+    git push -u origin main
 
     echo "✅ Backup completed successfully!"
 else
     echo "✨ No changes detected. Pulling latest anyway..."
-    git pull --rebase origin master
+    git pull --rebase origin main
     echo "✅ Repository is up to date!"
 fi
