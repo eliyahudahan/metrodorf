@@ -1,6 +1,28 @@
 #!/bin/bash
 
-# Check the current git status
+# ============================================
+# 📁 PART 1: FIND AND PRESERVE ALL EMPTY FOLDERS
+# ============================================
+echo "📁 Checking for empty folders..."
+
+# Find all empty directories (excluding .git and __pycache__)
+EMPTY_FOLDERS=$(find . -type d -empty -not -path "./.git/*" -not -path "*/__pycache__/*" -not -name "__pycache__")
+
+if [[ -n "$EMPTY_FOLDERS" ]]; then
+    echo "   Found empty folders. Adding .gitkeep to preserve structure:"
+    
+    # Loop through each empty folder and add .gitkeep
+    echo "$EMPTY_FOLDERS" | while read folder; do
+        echo "   📌 Preserving: $folder/"
+        touch "$folder/.gitkeep"
+    done
+else
+    echo "   ✅ No empty folders found."
+fi
+
+# ============================================
+# 📦 PART 2: NORMAL GIT BACKUP
+# ============================================
 echo "📦 Checking git status..."
 git status
 
@@ -9,11 +31,9 @@ if [[ -n $(git status --porcelain) ]]; then
     echo "💾 Stashing local changes..."
     git stash
     
-    # Always use rebase to avoid merge commits and handle divergent branches
     echo "🔄 Pulling latest changes with rebase..."
     git pull --rebase origin main
     
-    # Apply stashed changes back
     echo "📤 Applying local changes back..."
     git stash pop
     
@@ -25,7 +45,7 @@ if [[ -n $(git status --porcelain) ]]; then
         exit 1
     fi
     
-    # Add all changes (including new files)
+    # Add all changes (including new files and .gitkeep files)
     echo "➕ Adding all changes..."
     git add .
     
