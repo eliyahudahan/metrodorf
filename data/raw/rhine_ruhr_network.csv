@@ -1,0 +1,9 @@
+name,city,id,latitude,longitude,zone_city
+Dortmund Hbf,Dortmund,dortmund,0.0,0.0,Dortmund
+Essen Hbf,Essen,essen,0.0,0.0,Essen
+Duisburg Hbf,Duisburg,duisburg,0.0,0.0,Duisburg
+Düsseldorf Hbf,Düsseldorf,düsseldorf,0.0,0.0,Düsseldorf
+Cologne Hbf,Cologne,cologne,0.0,0.0,Cologne
+Bonn Hbf,Bonn,bonn,0.0,0.0,Bonn
+Bochum Hbf,Bochum,bochum,0.0,0.0,Bochum
+Wuppertal Hbf,Wuppertal,wuppertal,0.0,0.0,Wuppertal
