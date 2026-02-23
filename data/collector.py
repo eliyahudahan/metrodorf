@@ -170,11 +170,18 @@ class DBCollector:
         is_cologne = np.random.random(n_samples) < 0.3  # 30% of trains pass Cologne
         
         # Generate delays with realistic patterns
-        base_delay = np.random.exponential(3, n_samples)
-        peak_factor = 1.5 * is_peak
-        cologne_factor = 2.0 * is_cologne
-        
-        delay_minutes = base_delay * (1 + peak_factor + cologne_factor)
+        base_delay = np.random.exponential(3, n_samples)  # Base delay 3 min average
+
+        # Peak hours: 50% more delay
+        peak_multiplier = np.ones(n_samples)
+        peak_multiplier[is_peak] = 1.5
+
+        # Cologne bottleneck: 100% more delay (67% of delays start here!)
+        cologne_multiplier = np.ones(n_samples)
+        cologne_multiplier[is_cologne] = 2.0
+
+        # Combined effect (multiplicative)
+        delay_minutes = base_delay * peak_multiplier * cologne_multiplier
         
         data = {
             'distance_km': distance,
