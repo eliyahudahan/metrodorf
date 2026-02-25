@@ -1,0 +1,3 @@
+Levy (2024): Gaussian decay
+TU Darmstadt (2023): Cologne bottleneck
+Al Ghamdi (2022): Ensemble weights: {'xgb': 0.3133281189950973, 'rf': 0.2124988477257414, 'gaussian': 0.47417303327916127}
