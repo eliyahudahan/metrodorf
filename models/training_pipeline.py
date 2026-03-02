@@ -10,7 +10,18 @@ class TrainingPipeline:
     """Training pipeline with smartphone-optimized parameters"""
     
     def train_ensemble(self):
-        """Train heterogeneous ensemble (Al Ghamdi 2022)"""
+        """
+        Train heterogeneous ensemble (Al Ghamdi 2022)
+        
+        Delay distributions follow Bologna 2025 findings:
+        • German high-speed trains (ICE): exponential distribution
+        • Local trains: power-law tails (heavy tails)
+        • Priority rules: lower priority → more delays
+        
+        External factors justified by UvA 2025:
+        • Network features alone give only 0.65 BA
+        • Need weather, time-of-day, events (all in our features!)
+        """
         X, y = self.prepare_features()
         
         # Split data
@@ -21,7 +32,7 @@ class TrainingPipeline:
             X_temp, y_temp, test_size=0.5, random_state=42
         )
         
-        # XGBoost with smartphone learnings (LR=0.114 principle!)
+        # XGBoost with smartphone learnings
         logger.info("Training XGBoost with optimized parameters...")
         xgb_model = xgb.XGBRegressor(
             n_estimators=100,
@@ -39,18 +50,22 @@ class TrainingPipeline:
         
         # Random Forest
         logger.info("Training Random Forest...")
-        rf_model = RandomForestRegressor(n_estimators=100, max_depth=10, random_state=42)
+        rf_model = RandomForestRegressor(
+            n_estimators=100, 
+            max_depth=10, 
+            random_state=42
+        )
         rf_model.fit(X_train, y_train)
         self.models['rf'] = rf_model
         self.weights['rf'] = max(0, rf_model.score(X_val, y_val))
         
-        # Gaussian model (Levy's insight!)
+        # Gaussian model
         logger.info("Training Gaussian-inspired model...")
         self.models['gaussian'] = GaussianInspiredModel(self.zone_matrix)
         self.models['gaussian'].fit(X_train, y_train)
         self.weights['gaussian'] = max(0, self.models['gaussian'].score(X_val, y_val))
         
-        # Normalize weights (like your 0.114 optimization!)
+        # Normalize weights
         total = sum(self.weights.values())
         if total > 0:
             for name in self.weights:
