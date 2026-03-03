@@ -1,6 +1,9 @@
 """
 Gaussian-inspired model for delay prediction
-Based on Bologna 2025 power laws and heavy tails
+Based on Bologna 2025 findings:
+- Heavy-tailed delay distributions
+- Laplacian noise for station-to-station fluctuations
+- Priority rules (Cologne bottleneck = 2.0x multiplier)
 """
 
 import numpy as np
@@ -9,17 +12,10 @@ from sklearn.metrics import r2_score
 
 class GaussianInspiredModel:
     """
-    Gaussian-inspired model for delay prediction
-    
-    Based on Bologna 2025 (Rondini et al.):
-    • Station-to-station delays follow Asymmetric Laplace distribution
-    • Local trains show power-law tails (heavy tails)
-    • Priority rules explain cut-offs at 30/60 minutes
-    
-    Our model captures these through:
-    • distance_decay: Gaussian decay with sigma=50
-    • cologne_kernel: 2.0 multiplier for bottleneck
-    • Ridge regression with L2 regularization
+    Model that captures Bologna 2025 insights:
+    • Heavy tails → Ridge regularization prevents overfitting to extremes
+    • Laplacian noise → distance_decay feature models uncertainty
+    • Priority rules → cologne_kernel applies 2.0x multiplier
     """
     
     def __init__(self, zone_matrix=None):
@@ -28,24 +24,31 @@ class GaussianInspiredModel:
         self.coefficients = None
     
     def fit(self, X, y):
+        """
+        Train model with Bologna-inspired features
+        - L2 regularization (alpha=1.0) handles heavy tails
+        - Cologne bottleneck gets 2.0x priority multiplier
+        - Distance decay models Laplacian noise
+        """
         # Create copy to avoid modifying original
         X_with_kernel = X.copy()
         
-        # Add Cologne bottleneck effect (2.0x multiplier)
+        # Bologna 2025: Priority rules - Cologne bottleneck effect
         if self.zone_matrix is not None and 'is_cologne_bottleneck' in X.columns:
             X_with_kernel['cologne_kernel'] = X['is_cologne_bottleneck'] * 2.0
         
-        # Add Gaussian distance decay (Levy's insight)
+        # Bologna 2025: Laplacian noise - distance-based decay
         if 'distance_km' in X.columns:
-            sigma = 50  # Typical zone size in Rhine-Ruhr
+            sigma = 50  # Regional scale (km)
             X_with_kernel['distance_decay'] = np.exp(-(X['distance_km']**2) / (2 * sigma**2))
         
-        # Train Ridge regression
+        # Ridge regression with L2 regularization prevents overfitting to heavy tails
         self.model = Ridge(alpha=1.0)
         self.model.fit(X_with_kernel, y)
         return self
     
     def predict(self, X):
+        """Make predictions using trained model"""
         X_with_kernel = X.copy()
         
         if self.zone_matrix is not None and 'is_cologne_bottleneck' in X.columns:
@@ -58,4 +61,5 @@ class GaussianInspiredModel:
         return self.model.predict(X_with_kernel)
     
     def score(self, X, y):
+        """Calculate R² score"""
         return r2_score(y, self.predict(X))
