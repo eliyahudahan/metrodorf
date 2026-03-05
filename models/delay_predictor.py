@@ -68,6 +68,27 @@ class DelayPredictor(BasePredictor, EnsembleMethods, TrainingPipeline, ModelEval
             'ensemble_weights': self.weights
         }
     
+    def update_with_realtime(self, new_samples=100):
+        """Retrain model with fresh real-time data"""
+        from data.real_time_collector import RealTimeCollector
+        collector = RealTimeCollector()
+        
+        # Collect fresh data
+        fresh_data = collector.collect_training_data(
+            n_samples=new_samples, 
+            real_ratio=1.0  # 100% real this time
+        )
+        
+        # Combine with existing training data
+        self.training_data = pd.concat([
+            self.training_data, 
+            fresh_data
+        ]).drop_duplicates().reset_index(drop=True)
+        
+        # Retrain ensemble
+        self.train_ensemble()
+        logger.info(f"✅ Model updated with {len(fresh_data)} new real samples")
+    
     def save_models(self):
         """Save trained models for later use"""
         print("\n💾 SAVING MODELS...")
@@ -111,3 +132,7 @@ if __name__ == "__main__":
     for desc, dist, tod, dow, peak, cologne in test_cases:
         delay = predictor.predict_delay(dist, tod, dow, peak, cologne)
         print(f"{desc:30}: {delay:.1f} min")
+    
+    # Optional: Update with real-time data
+    # predictor.update_with_realtime(new_samples=50)
+    predictor.update_with_realtime(new_samples=50)

@@ -4,6 +4,8 @@ Loads data and creates features based on core research papers:
 - Bologna 2025: Heavy tails, Laplacian noise, priority rules
 - UvA 2025: External factors (time, events) essential for beating baseline
 - Al Ghamdi 2022: Features prepared for ensemble methods
+
+Real-time data: Uses v6.db.transport.rest API with synthetic fallback
 """
 
 import pandas as pd
@@ -16,22 +18,49 @@ logger = logging.getLogger(__name__)
 class BasePredictor:
     """Base class with data loading and feature preparation"""
     
-    def __init__(self):
-        # Load preprocessed training data
-        self.training_data = pd.read_csv("data/processed/training_data.csv")
+    def __init__(self, use_real_data=True, real_ratio=0.5):
+        """
+        Initialize predictor with optional real-time data
         
-        # Load zone interaction matrix (city-to-city influence)
+        Args:
+            use_real_data: If True, tries to fetch real data from API
+            real_ratio: Percentage of real data in training set (0.0 to 1.0)
+        """
+        
+        # === OPTION 1: LOAD REAL-TIME DATA (with fallback) ===
+        if use_real_data:
+            try:
+                from data.real_time_collector import RealTimeCollector
+                collector = RealTimeCollector()
+                
+                logger.info("📡 Attempting to fetch real-time data from v6.db.transport.rest...")
+                self.training_data = collector.collect_training_data(
+                    n_samples=1000,
+                    real_ratio=real_ratio
+                )
+                logger.info(f"✅ Loaded {len(self.training_data)} samples "
+                          f"({(self.training_data['source']=='real').sum()} real, "
+                          f"{(self.training_data['source']=='synthetic').sum()} synthetic)")
+            except Exception as e:
+                logger.warning(f"⚠️ Real-time data failed: {e}")
+                logger.info("📁 Falling back to preprocessed training_data.csv")
+                self.training_data = pd.read_csv("data/processed/training_data.csv")
+        
+        # === OPTION 2: LOAD PREPROCESSED DATA (original) ===
+        else:
+            self.training_data = pd.read_csv("data/processed/training_data.csv")
+            logger.info(f"✅ Loaded {len(self.training_data)} preprocessed training samples")
+        
+        # === LOAD ZONE MATRIX AND FEATURES (always from files) ===
         self.zone_matrix = pd.read_csv("data/processed/zone_interaction_matrix.csv", index_col=0)
-        
-        # Load station features
         self.zone_features = pd.read_csv("data/processed/zone_features.csv")
         
-        # Initialize model storage
+        # === INITIALIZE MODEL STORAGE ===
         self.models = {}      # Will store trained models: xgb, rf, gaussian
         self.weights = {}     # Will store R²-based weights for ensemble
         
-        logger.info(f"✅ Loaded {len(self.training_data)} training samples")
         logger.info(f"✅ Loaded {len(self.zone_matrix)} zones")
+        logger.info(f"✅ Loaded {len(self.zone_features)} station features")
     
     def prepare_features(self):
         """
