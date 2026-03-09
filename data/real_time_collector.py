@@ -15,6 +15,7 @@ import time
 import numpy as np
 from pathlib import Path
 import xml.etree.ElementTree as ET
+from database.db_manager import DatabaseManager
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,9 @@ class RealTimeCollector:
             'vbb': 0
         }
         self.max_failures = 3  # Disable API after 3 consecutive failures
-        
+        # Initialize database connection
+        self.db = DatabaseManager()
+        self.db.create_tables()  # Ensure tables exist
         # Track overall API availability
         self.api_available = self._check_any_api()
         if self.api_available:
@@ -266,40 +269,57 @@ class RealTimeCollector:
     def parse_departure(self, departure, station_name):
         """Parse departure data into training format"""
         try:
-            # Extract delay in minutes
-            delay = 0
-            if 'delay' in departure and departure['delay'] is not None:
-                delay = departure['delay'] // 60  # Convert seconds to minutes
-            elif 'delayInMinutes' in departure and departure['delayInMinutes'] is not None:
-                delay = departure['delayInMinutes']
+             # Extract delay in minutes
+             delay = 0
+             if 'delay' in departure and departure['delay'] is not None:
+                 delay = departure['delay'] // 60  # Convert seconds to minutes
+             elif 'delayInMinutes' in departure and departure['delayInMinutes'] is not None:
+                 delay = departure['delayInMinutes']
 
-            when = departure.get('when', '')
-            
-            hour = 0
-            if when:
+             when = departure.get('when', '')
+        
+             hour = 0
+             if when:
                 try:
-                    hour = datetime.fromisoformat(when.replace('Z', '+00:00')).hour
+                     hour = datetime.fromisoformat(when.replace('Z', '+00:00')).hour
                 except:
-                    hour = 12
-            
-            is_peak = 1 if (7 <= hour <= 9) or (16 <= hour <= 18) else 0
-            
-            direction = departure.get('direction', '').lower()
-            is_cologne = 1 if 'köln' in direction or 'cologne' in direction else 0
-            
-            return {
-                'distance_km': self._estimate_distance(station_name, direction),
-                'time_of_day': hour,
-                'day_of_week': datetime.now().weekday(),
-                'is_peak_hour': is_peak,
-                'is_cologne_bottleneck': is_cologne,
-                'delay_minutes': max(0, delay),
-                'source': 'real',
-                'timestamp': datetime.now().isoformat()
-            }
+                     hour = 12
+        
+             is_peak = 1 if (7 <= hour <= 9) or (16 <= hour <= 18) else 0
+        
+             direction = departure.get('direction', '').lower()
+             is_cologne = 1 if 'köln' in direction or 'cologne' in direction else 0
+        
+             parsed = {
+                 'distance_km': self._estimate_distance(station_name, direction),
+                 'time_of_day': hour,
+                 'day_of_week': datetime.now().weekday(),
+                 'is_peak_hour': is_peak,
+                 'is_cologne_bottleneck': is_cologne,
+                 'delay_minutes': max(0, delay),
+                 'source': 'real',
+                 'timestamp': datetime.now().isoformat()
+             }
+        
+             # Save to database
+             station_id = self.db.insert_station(
+                 station_name,
+                 self.stations[station_name]['eva'],
+                 self.stations[station_name]['ds100'],
+                 self.stations[station_name]['lat'],
+                 self.stations[station_name]['lon']
+             )
+             if station_id:
+                # Note: is_peak_hour and is_cologne_bottleneck converted to boolean inside insert_real_delay
+                self.db.insert_real_delay(station_id, parsed)
+                logger.debug(f"💾 Saved to DB: {parsed['delay_minutes']} min delay")
+        
+             return parsed
+        
         except Exception as e:
-            logger.error(f"Error parsing departure: {e}")
-            return None
+           logger.error(f"Error parsing departure: {e}")
+           return None
+           
     
     def _estimate_distance(self, from_station, to_city):
         """Estimate distance between stations (simplified)"""
