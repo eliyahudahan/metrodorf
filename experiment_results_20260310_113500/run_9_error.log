@@ -1,0 +1,28 @@
+<frozen runpy>:128: RuntimeWarning: 'models.delay_predictor' found in sys.modules after import of package 'models', but prior to execution of 'models.delay_predictor'; this may result in unpredictable behaviour
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/framg/dev/metrodorf/models/delay_predictor.py", line 120, in <module>
+    results = predictor.train_ensemble()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/framg/dev/metrodorf/models/delay_predictor.py", line 56, in train_ensemble
+    self.evaluate_models(X_test, y_test)
+  File "/home/framg/dev/metrodorf/models/evaluation.py", line 31, in evaluate_models
+    ensemble_pred = self.predict_ensemble(X_test)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/framg/dev/metrodorf/models/ensemble_methods.py", line 22, in predict_ensemble
+    weight = self.weights[name] / total_weight
+             ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~
+ZeroDivisionError: division by zero
+
+============================================================
+🚆 DELAY PREDICTION MODEL (Steps B→C→D)
+============================================================
+
+
+============================================================
+📊 MODEL COMPARISON (Step C)
+============================================================
+xgb        R²=0.144, MAE=3.13 min
+rf         R²=0.019, MAE=3.21 min
+gaussian   R²=0.095, MAE=3.13 min
