@@ -1,0 +1,9 @@
+name,eva,ds100,source,timestamp,original_name,corrected,correction_reason
+Dortmund Hbf,8000080,EDO,iris,2026-03-11T15:09:56.569548,,,
+Essen Hbf,8000098,EE,iris,2026-03-11T15:09:59.027325,,,
+Duisburg Hbf,8000086,EDG,iris,2026-03-11T15:10:01.612498,,,
+Düsseldorf Hbf,8000085,KD,iris,2026-03-11T15:10:04.093103,,,
+Köln Hbf,8000207,KK,iris,2026-03-11T15:10:06.442119,,,
+Bonn Hbf,8000044,KB,iris,2026-03-11T15:10:08.856224,,,
+Bochum Hbf,8000039,FBGK,iris,2026-03-11T15:10:11.417864,Bingen(Rhein) Hbf,True,API returned Bingen(Rhein) Hbf for Bochum Hbf
+Wuppertal Hbf,8000266,KW,iris,2026-03-11T15:10:13.789895,,,

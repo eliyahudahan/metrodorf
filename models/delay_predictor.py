@@ -31,7 +31,7 @@ import logging
 from pathlib import Path
 import pandas as pd
 import joblib
-
+from typing import Dict, Any
 from .base_predictor import BasePredictor
 from .ensemble_methods import EnsembleMethods
 from .training_pipeline import TrainingPipeline
@@ -47,7 +47,8 @@ class DelayPredictor(BasePredictor, EnsembleMethods, TrainingPipeline, ModelEval
     
     def __init__(self):
         super().__init__()
-        
+        self.weights: Dict[str, float] = {}
+
     def train_ensemble(self):
         """Train ensemble and evaluate against research"""
         X_test, y_test = super().train_ensemble()
@@ -102,10 +103,27 @@ class DelayPredictor(BasePredictor, EnsembleMethods, TrainingPipeline, ModelEval
     
     def load_models(self):
         """Load previously trained models"""
+        # Load each model
         for name in ['xgb', 'rf', 'gaussian']:
-            self.models[name] = joblib.load(f"models/saved/{name}_model.pkl")
-        self.weights = pd.read_csv("models/saved/model_weights.csv", index_col=0)[0].to_dict()
-        logger.info("✅ Models loaded")
+            model_path = f"models/saved/{name}_model.pkl"
+            if Path(model_path).exists():
+                self.models[name] = joblib.load(model_path)
+                logger.info(f"✅ Loaded {name} from {model_path}")
+            else:
+                logger.warning(f"⚠️ {name} model not found")
+        
+        # Load weights
+        weights_path = "models/saved/model_weights.csv"
+        if Path(weights_path).exists():
+            weights_df = pd.read_csv(weights_path, index_col=0, header=None)
+            raw_weights = weights_df.iloc[:, 0].to_dict()
+            self.weights = {str(k): float(v) for k, v in raw_weights.items()}
+            logger.info(f"✅ Loaded weights: {self.weights}")
+        else:
+            logger.warning("⚠️ No weights file found")
+            self.weights = {}
+        
+        logger.info("✅ Models loaded successfully")
 
 
 # ============================================
@@ -124,9 +142,9 @@ if __name__ == "__main__":
     
     # Test cases covering all scenarios
     test_cases = [
-        ("Cologne → Dortmund, peak", 70, 17, 2, 1, 1),  # Bologna priority + UvA external
-        ("Essen → Bochum, off-peak", 15, 10, 2, 0, 0),  # Baseline (no factors)
-        ("Cologne → Düsseldorf, peak", 40, 8, 2, 1, 1), # Bologna + UvA combined
+        ("Cologne → Dortmund, peak", 70, 17, 2, 1, 1),
+        ("Essen → Bochum, off-peak", 15, 10, 2, 0, 0),
+        ("Cologne → Düsseldorf, peak", 40, 8, 2, 1, 1),
     ]
     
     for desc, dist, tod, dow, peak, cologne in test_cases:
@@ -134,5 +152,4 @@ if __name__ == "__main__":
         print(f"{desc:30}: {delay:.1f} min")
     
     # Optional: Update with real-time data
-    # predictor.update_with_realtime(new_samples=50)
     predictor.update_with_realtime(new_samples=50)

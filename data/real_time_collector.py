@@ -287,7 +287,7 @@ class RealTimeCollector:
         
              is_peak = 1 if (7 <= hour <= 9) or (16 <= hour <= 18) else 0
         
-             direction = departure.get('direction', '').lower()
+             direction = (departure.get('direction') or '').lower()
              is_cologne = 1 if 'köln' in direction or 'cologne' in direction else 0
         
              parsed = {
