@@ -45,9 +45,12 @@ class DelayPredictor(BasePredictor, EnsembleMethods, TrainingPipeline, ModelEval
     Combines research from Al Ghamdi (ensemble), Bologna (heavy tails), UvA (baseline)
     """
     
-    def __init__(self):
+    def __init__(self, load_data=True): # Add parameter
         super().__init__()
         self.weights: Dict[str, float] = {}
+        if load_data:
+           # Only if you want to retrain
+           self.training_data = pd.read_csv("data/processed/training_data.csv")
 
     def train_ensemble(self):
         """Train ensemble and evaluate against research"""

@@ -75,11 +75,11 @@ class RealTimeCollector:
         now = time.time()
         time_since_last = now - self.last_request_time.get(api_name, 0)
         if time_since_last < self.min_request_interval:
-            sleep_time = self.min_request_interval - time_since_last
-            logger.debug(f"⏳ Rate limit for {api_name}: waiting {sleep_time:.1f}s")
-            time.sleep(sleep_time)
-        self.last_request_time[api_name] = time.time()
-    
+           sleep_time = self.min_request_interval - time_since_last
+           logger.debug(f"⏳ Rate limit for {api_name}: waiting {sleep_time:.1f}s")
+           time.sleep(sleep_time)
+           self.last_request_time[api_name] = time.time()  # type: ignore
+              
     def _check_any_api(self):
         """Check if at least one API is reachable"""
         # Try IRIS first (most reliable)
@@ -335,6 +335,36 @@ class RealTimeCollector:
         return distances.get((from_station, to_city.lower()), 50)
     
     def generate_synthetic_sample(self):
+        """Generate realistic synthetic sample based on Bologna 2025"""
+        np.random.seed()
+    
+        # Base delay: mostly small, sometimes large (heavy tails)
+        base_delay = np.random.exponential(3)
+    
+        # More realistic probabilities
+        # In reality, only ~15% of trains are in peak hours, ~10% pass Cologne
+        is_peak = np.random.choice([0, 1], p=[0.85, 0.15])     # 15% peak
+        is_cologne = np.random.choice([0, 1], p=[0.9, 0.1])    # 10% Cologne
+    
+        peak_factor = 1.5 if is_peak else 1.0
+        cologne_factor = 2.0 if is_cologne else 1.0
+    
+        delay = base_delay * peak_factor * cologne_factor
+    
+        # Add some noise to make it realistic
+        noise = np.random.normal(0, 0.5)
+        delay = max(0, delay + noise)
+    
+        return {
+          'distance_km': np.random.uniform(10, 100),
+          'time_of_day': np.random.randint(0, 24),
+          'day_of_week': np.random.randint(0, 7),
+          'is_peak_hour': is_peak,
+          'is_cologne_bottleneck': is_cologne,
+          'delay_minutes': round(delay, 1),
+          'source': 'synthetic'
+        }
+    
         """Generate realistic synthetic sample based on Bologna 2025"""
         np.random.seed()
         
