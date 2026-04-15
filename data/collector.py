@@ -21,7 +21,7 @@ class DBCollector:
     Collects German train data with multiple fallback sources
     """
     
-    def __init__(self, use_live_api=False):
+    def __init__(self, use_live_api=True):
         self.use_live_api = use_live_api
         
         # Data paths
