@@ -69,7 +69,49 @@ class RealTimeCollector:
             logger.info("✅ At least one real-time API available")
         else:
             logger.warning("⚠️ No real-time APIs available - using synthetic fallback")
+
+
+    def get_delays_from_all_apis(self, station_name):
+        """
+        Get delay minutes from all available APIs for a station.
+        Returns a dictionary with delay values (or None if failed).
+        """
+        station_data = self.stations.get(station_name)
+        if not station_data:
+           return None
     
+        delays = {}
+    
+        # Try IRIS (most reliable)
+        iris_departures = self._get_from_iris(station_data['eva'])
+        if iris_departures:
+            # Get first departure's delay
+            delays['iris'] = self._extract_delay_from_xml(iris_departures)
+    
+        # Try v6
+        v6_departures = self._get_from_v6(station_data['eva'])
+        if v6_departures and len(v6_departures) > 0:
+           delays['v6'] = v6_departures[0].get('delay', 0) // 60
+    
+        # Try VBB
+        vbb_departures = self._get_from_vbb(station_data['eva'])
+        if vbb_departures and len(vbb_departures) > 0:
+           delays['vbb'] = vbb_departures[0].get('delay', 0) // 60
+    
+        return delays
+
+    def _extract_delay_from_xml(self, station_element):
+        """Extract delay minutes from IRIS XML response."""
+        try:
+            for train in station_element.findall('.//ar'):
+                # Delay is in 'tl' attribute (timetable latency)
+                if train.get('tl'):
+                   return int(train.get('tl')) // 60
+        except:
+                pass
+        return None
+
+
     def _wait_for_rate_limit(self, api_name):
         """Enforce 10-second minimum interval between requests to same API"""
         now = time.time()
@@ -440,9 +482,39 @@ class RealTimeCollector:
         
         logger.info(f"✅ Saved {len(df)} samples ({real_samples} real, {synthetic_needed} synthetic)")
         return df
+    
+    
 
 
-# Quick test
+    def weighted_sensor_fusion(self, sensor_readings: list, weights: list) -> float:
+        """
+        Combine multiple sensor readings with weights.
+    
+        Args:
+        sensor_readings: List of values from different sources (e.g., [10, 20, 15])
+        weights: List of reliability weights (e.g., [0.7, 0.2, 0.1])
+    
+        Returns:
+        Weighted average
+        """
+        # 1. Validate lengths match
+        if len(sensor_readings) != len(weights):
+           raise ValueError("sensor_readings and weights must have same length")
+    
+        # 2. Calculate weighted sum
+        total_weight = sum(weights)
+        if total_weight == 0:
+           return 0
+    
+        weighted_sum = 0
+        for reading, weight in zip(sensor_readings, weights):
+            weighted_sum += reading * weight
+    
+        # 3. Return result
+        return weighted_sum / total_weight
+
+
+
 if __name__ == "__main__":
     collector = RealTimeCollector()
     
@@ -471,3 +543,6 @@ if __name__ == "__main__":
     df = collector.collect_training_data(n_samples=20, real_ratio=0.1)
     print(f"\n✅ Collected {len(df)} samples")
     print(df[['source', 'delay_minutes']].head(10))
+    # At the end of `if __name__ == "__main__":` add:
+    fusion = collector.weighted_sensor_fusion([10, 20, 15], [0.7, 0.2, 0.1])
+    print(f"Fusion test: {fusion}")  # Should print: 12.5
