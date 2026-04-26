@@ -1,6 +1,7 @@
 """
 Zone Builder for Rhine-Ruhr Polycentric Region
-Based on Levy (2024) - Polycentric Urban Networks
+Based on Gaussian decay (standard spatial analysis)
+UvA 2025 network features are used separately in the ML models
 """
 
 import pandas as pd

@@ -1,0 +1,11 @@
+distance_km,time_of_day,day_of_week,is_peak_hour,is_cologne_bottleneck,delay_minutes,source,timestamp
+50.0,14,6,0,0,7.0,real_fused,2026-04-26T14:48:58.526371
+50.0,14,6,0,0,27.0,real_fused,2026-04-26T14:49:09.948149
+50.0,14,6,0,0,9.0,real_fused,2026-04-26T14:49:21.268155
+32.43882294455796,17,6,0,0,0.0,synthetic,
+11.563679158724966,23,1,1,0,1.5,synthetic,
+12.735837482999521,21,2,1,0,6.8,synthetic,
+60.12026731436161,21,0,0,0,0.0,synthetic,
+43.65264330167527,6,2,0,0,8.9,synthetic,
+42.0039438471371,6,3,0,0,2.4,synthetic,
+52.53260977385197,12,0,0,0,3.6,synthetic,

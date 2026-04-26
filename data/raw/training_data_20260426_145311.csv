@@ -1,0 +1,11 @@
+distance_km,time_of_day,day_of_week,is_peak_hour,is_cologne_bottleneck,delay_minutes,source
+70.46079504316896,9,1,0,0,5.0,synthetic
+17.50247498055804,6,4,0,0,0.6,synthetic
+92.75163524815777,18,3,0,0,6.7,synthetic
+40.225915153505724,3,1,1,0,6.6,synthetic
+49.22205115960422,20,1,0,0,2.3,synthetic
+82.24498898540851,23,5,0,0,10.9,synthetic
+34.19739395177007,21,5,0,0,2.7,synthetic
+95.46457026103407,15,1,0,0,3.7,synthetic
+61.57174536757403,15,2,0,0,4.4,synthetic
+54.930585706084415,12,5,0,0,1.8,synthetic

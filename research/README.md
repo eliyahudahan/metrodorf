@@ -15,6 +15,26 @@ It combines **heterogeneous ensemble learning** with **power-law delay distribut
 
 ---
 
+## ✅ Model Validation Checklist
+
+| Source | Requirement | Status | Evidence |
+|--------|-------------|--------|----------|
+| Al Ghamdi 2022 | Weighted ensemble (R²) | ✅ | 3 models, weights 0.474/0.313/0.212 |
+| Bologna 2025 | Heavy tails → Gaussian dominates | ✅ | Gaussian weight 47.4% |
+| UvA 2025 | External factors > network features | ✅ | Beats 0.65 BA baseline |
+| Dr. Oscar | Graceful degradation | ⏳ | Exponential backoff + fallback |
+| Dr. Oscar | Sensor fusion | ⏳ | Weighted average across APIs |
+| Real-time data | APIs (IRIS, v6, VBB) | ✅ | Live collection working |
+
+## 👨‍🔬 Expert Feedback Implemented (Dr. Oscar Ramírez-Agudelo, DLR)
+
+| Recommendation | Implementation | Status |
+|----------------|----------------|--------|
+| Exponential backoff + jitter | `api_client.py` retry logic | ⏳ Pending |
+| Cache recent observations | `cache_manager.py` | ⏳ Pending |
+| Weighted sensor fusion | `weighted_sensor_fusion()` | ✅ Added |
+| Prediction intervals | Ensemble variance | ⏳ Planned |
+
 ## 🧠 How the Research Connects
 ┌─────────────────────┐
 │ Al Ghamdi (2022) │

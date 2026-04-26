@@ -85,6 +85,37 @@ class RealTimeCollector:
         # Try IRIS (most reliable)
         iris_departures = self._get_from_iris(station_data['eva'])
         if iris_departures:
+           delays['iris'] = self._extract_delay_from_xml(iris_departures)
+    
+        # Try v6 - with None handling
+        v6_departures = self._get_from_v6(station_data['eva'])
+        if v6_departures and len(v6_departures) > 0:
+           delay_value = v6_departures[0].get('delay')
+           if delay_value is not None:
+              delays['v6'] = delay_value // 60
+    
+        # Try VBB - with None handling
+        vbb_departures = self._get_from_vbb(station_data['eva'])
+        if vbb_departures and len(vbb_departures) > 0:
+           delay_value = vbb_departures[0].get('delay')
+           if delay_value is not None:
+              delays['vbb'] = delay_value // 60
+    
+        return delays
+
+        """
+        Get delay minutes from all available APIs for a station.
+        Returns a dictionary with delay values (or None if failed).
+        """
+        station_data = self.stations.get(station_name)
+        if not station_data:
+           return None
+    
+        delays = {}
+    
+        # Try IRIS (most reliable)
+        iris_departures = self._get_from_iris(station_data['eva'])
+        if iris_departures:
             # Get first departure's delay
             delays['iris'] = self._extract_delay_from_xml(iris_departures)
     
@@ -429,61 +460,87 @@ class RealTimeCollector:
             'source': 'synthetic'
         }
     
+    
     def collect_training_data(self, n_samples=1000, real_ratio=0.3):
         """
         Collect mixed dataset: real + synthetic
-        Tries multiple APIs with conservative rate limiting
+        Uses weighted sensor fusion to combine multiple APIs
         """
         data = []
         real_samples = 0
-        
+    
+        # API reliability weights (Dr. Oscar's recommendation)
+        api_weights = {
+           'iris': 0.7,   # most reliable
+           'v6': 0.2,     # unstable
+           'vbb': 0.1     # least reliable
+        }
+    
         if self.api_available:
-            target_real = int(n_samples * real_ratio)
-            logger.info(f"📡 Attempting to collect up to {target_real} real samples...")
-            
-            for station_name in self.stations.keys():
-                if real_samples >= target_real:
-                    break
-                
-                # Get station info (minimal API calls)
-                station_info = self.get_station_info(station_name)
-                
-                # Get departures (main data source)
-                departures = self.get_departures(station_name, limit=5)
-                
-                if departures:
-                    for dep in departures[:3]:  # Take up to 3 per station
-                        if real_samples >= target_real:
-                            break
-                        parsed = self.parse_departure(dep, station_name)
-                        if parsed:
-                            data.append(parsed)
-                            real_samples += 1
-                
-                # Extra wait between stations (respect all APIs)
-                time.sleep(5)
-            
-            logger.info(f"✅ Collected {real_samples} real samples")
+           target_real = int(n_samples * real_ratio)
+           logger.info(f"📡 Attempting to collect up to {target_real} real samples...")
         
+           for station_name in self.stations.keys():
+                if real_samples >= target_real:
+                   break
+            
+                # STEP 1: Get delays from ALL APIs
+                delays_dict = self.get_delays_from_all_apis(station_name)
+              
+                if delays_dict:
+                   # STEP 2: Extract readings and weights
+                   readings = []
+                   weights = []
+                   for api_name, delay in delays_dict.items():
+                        if delay is not None:
+                           readings.append(delay)
+                           weights.append(api_weights.get(api_name, 0.1))
+                
+                if readings:
+                    # STEP 3: Weighted fusion
+                    fused_delay = self.weighted_sensor_fusion(readings, weights)
+                    
+                    # STEP 4: Create sample with fused delay
+                    hour = datetime.now().hour
+                    is_peak = 1 if (7 <= hour <= 9) or (16 <= hour <= 18) else 0
+                    
+                    sample = {
+                        'distance_km': 50,  # default or estimate
+                        'time_of_day': hour,
+                        'day_of_week': datetime.now().weekday(),
+                        'is_peak_hour': is_peak,
+                        'is_cologne_bottleneck': 0,  # would need direction info
+                        'delay_minutes': fused_delay,
+                        'source': 'real_fused',
+                        'timestamp': datetime.now().isoformat()
+                    }
+                    
+                    data.append(sample)
+                    real_samples += 1
+                    logger.info(f"   ✓ Fusion: {readings} → {fused_delay:.1f} min")
+            
+                    # Extra wait between stations
+                    time.sleep(5)
+        
+                logger.info(f"✅ Collected {real_samples} real samples (fused)")
+    
         # Fill remaining with synthetic
         synthetic_needed = n_samples - len(data)
         if synthetic_needed > 0:
-            logger.info(f"🔄 Generating {synthetic_needed} synthetic samples...")
-            for _ in range(synthetic_needed):
-                data.append(self.generate_synthetic_sample())
-        
+           logger.info(f"🔄 Generating {synthetic_needed} synthetic samples...")
+           for _ in range(synthetic_needed):
+               data.append(self.generate_synthetic_sample())
+    
         df = pd.DataFrame(data)
-        
+    
         # Save with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = self.data_dir / f"training_data_{timestamp}.csv"
         df.to_csv(filename, index=False)
         df.to_csv("data/processed/training_data.csv", index=False)
-        
-        logger.info(f"✅ Saved {len(df)} samples ({real_samples} real, {synthetic_needed} synthetic)")
+    
+        logger.info(f"✅ Saved {len(df)} samples ({real_samples} real fused, {synthetic_needed} synthetic)")
         return df
-    
-    
 
 
     def weighted_sensor_fusion(self, sensor_readings: list, weights: list) -> float:
