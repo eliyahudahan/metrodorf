@@ -1,27 +1,10 @@
-# Data manipulation
 pandas==2.2.0
 numpy==1.26.3
-
-# Machine Learning
 scikit-learn==1.4.0
 xgboost==2.0.3
-
-# Visualization
 matplotlib==3.8.2
-seaborn==0.13.2
-folium==0.16.0
-
-# API and data collection
+plotly==5.18.0
+streamlit==1.31.0
 requests==2.31.0
-
-# Utilities
 python-dotenv==1.0.0
-tqdm==4.66.1
-jupyter==1.0.0
 joblib==1.3.2
-
-sqlalchemy==2.0.25
-psycopg2-binary==2.9.9
-
-# Database connection pooling (optional but recommended)
-# alembic==1.13.1  # for migrations (future)
