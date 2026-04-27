@@ -10,6 +10,7 @@ Always falls back to synthetic data when APIs unavailable
 import requests
 import pandas as pd
 import logging
+import random 
 from datetime import datetime
 import time
 import numpy as np
@@ -541,6 +542,24 @@ class RealTimeCollector:
     
         logger.info(f"✅ Saved {len(df)} samples ({real_samples} real fused, {synthetic_needed} synthetic)")
         return df
+    
+    def _call_api_with_retry(self, api_func, max_retries=3, base_delay=1):
+        """
+        Call API with exponential backoff + jitter (Dr. Oscar's recommendation)
+        """
+        for attempt in range(max_retries):
+            try:
+               result = api_func()
+               if result is not None:
+                  return result
+            except Exception as e:
+               if attempt == max_retries - 1:
+                raise
+            # Exponential backoff with jitter
+            wait_time = (base_delay * (2 ** attempt)) + random.uniform(0, 1)
+            logger.debug(f"Retry {attempt+1}/{max_retries} after {wait_time:.1f}s")
+            time.sleep(wait_time)
+        return None
 
 
     def weighted_sensor_fusion(self, sensor_readings: list, weights: list) -> float:
