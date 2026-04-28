@@ -10,15 +10,25 @@ Optimized version with:
 
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 import numpy as np
 from datetime import datetime
 import plotly.graph_objects as go
-import plotly.express as px
 from models.delay_predictor import DelayPredictor
 import time
 import logging
 import joblib
 from pathlib import Path
+
+# ============================================
+# PAGE CONFIGURATION
+# ============================================
+st.set_page_config(
+    page_title="Metrodorf - Delay Predictor",
+    page_icon="🚆",
+    layout="wide"
+)
+
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -95,15 +105,6 @@ def get_real_prediction(station, hour, day, is_peak, is_cologne):
     )
     
     return round(delay, 1)
-
-# ============================================
-# PAGE CONFIGURATION
-# ============================================
-st.set_page_config(
-    page_title="Metrodorf - Delay Predictor",
-    page_icon="🚆",
-    layout="wide"
-)
 
 # Title
 st.title("🚆 Metrodorf - Rhine-Ruhr Delay Prediction")
