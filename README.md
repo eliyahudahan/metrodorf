@@ -135,6 +135,10 @@ Kämpere, L. & Alsahag, M. (2025). Network Features for Delay Prediction. UvA Ma
 
 Nair et al. (2019). Ensemble Uncertainty Quantification.
 
+## 🖥️ Live Demo
+[Metrodorf Dashboard](https://metrodorf-6qxjae77w35b9xhjpilwxc.streamlit.app/)
+> Uses synthetic fallback data. Full version with live APIs runs locally.
+
 📄 License
 MIT
 
