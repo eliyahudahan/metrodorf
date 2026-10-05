@@ -1,41 +1,92 @@
+# ============================================
+# Metrodorf v2 — .gitignore
+# ============================================
+
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
 *.egg-info/
+.eggs/
 .pytest_cache/
 .ipynb_checkpoints/
 
 # Virtual environments
 venv/
 env/
+ENV/
 myenv/
 .venv/
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# Secrets
+# Secrets (NEVER commit)
 .env
 *.env
 !.env.example
+*.key
+*.pem
+*.p12
+*.pfx
 
-# Data (large files)
-data/raw/*.csv
-data/raw/*.parquet
-data/processed/*.csv
-data/processed/*.parquet
+# ============================================
+# Data (all large files)
+# ============================================
+data/raw/*
+!data/raw/.gitkeep
+
+data/processed/*
+!data/processed/.gitkeep
+
+# Any data files anywhere
+*.csv
+*.parquet
+*.json
+*.pkl
+*.joblib
+*.h5
+*.hdf5
+*.feather
+!*.example.json
+
+# BUT: keep the download_list for reference
+!data/raw/download_list.txt
+
+# ============================================
+# Models (trained artifacts)
+# ============================================
+models/saved/*
+!models/saved/.gitkeep
 *.pkl
 *.joblib
 
-# Models
-models/saved/*.pkl
-models/saved/*.joblib
-
+# ============================================
 # Experiments
+# ============================================
 experiment_results_*/
 *.tmp
+*.log
 
+# ============================================
 # OS
+# ============================================
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# ============================================
+# Project-specific
+# ============================================
+# Keep these tracked:
+!DAY_1_RESULTS.md
+!DAY_2_RESULTS.md
+!README.md
+!requirements.txt
