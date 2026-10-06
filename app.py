@@ -229,9 +229,10 @@ with tab4:
         lat="lat", lon="lon", text="name",
         zoom=7, height=600,
         title="IC 16-1 line — main stations",
+        mapbox_style="open-street-map",
     )
     fig.update_traces(marker=dict(size=12, color='#1f77b4'))
-    fig.update_layout(mapbox_style="open-street-map", margin=dict(l=0, r=0, t=40, b=0))
+    fig.update_layout(margin=dict(l=0, r=0, t=40, b=0))
     st.plotly_chart(fig, use_container_width=True)
     
     st.info("Station positions are approximate. Map shows the corridor, not all stops.")
