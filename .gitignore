@@ -90,3 +90,7 @@ desktop.ini
 !DAY_2_RESULTS.md
 !README.md
 !requirements.txt
+
+# Allow model metrics (small JSON files)
+!models/saved/*.json
+!models/saved/*.txt

@@ -1,0 +1,35 @@
+[
+  {
+    "config": {
+      "hidden": 64,
+      "num_layers": 2,
+      "dropout": 0.2,
+      "lr": 0.001,
+      "batch_size": 512,
+      "max_epochs": 10
+    },
+    "val_f1": 0.9107146715449379
+  },
+  {
+    "config": {
+      "hidden": 128,
+      "num_layers": 2,
+      "dropout": 0.3,
+      "lr": 0.001,
+      "batch_size": 512,
+      "max_epochs": 10
+    },
+    "val_f1": 0.9109587553483388
+  },
+  {
+    "config": {
+      "hidden": 64,
+      "num_layers": 1,
+      "dropout": 0.2,
+      "lr": 0.0005,
+      "batch_size": 1024,
+      "max_epochs": 10
+    },
+    "val_f1": 0.8989160829081265
+  }
+]
