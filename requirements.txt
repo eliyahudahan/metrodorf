@@ -7,6 +7,6 @@ seaborn>=0.13
 requests>=2.31
 pyarrow>=14.0
 streamlit>=1.30
-plotly>=5.18
+plotly>=6.0
 folium>=0.15
 streamlit-folium>=0.18
